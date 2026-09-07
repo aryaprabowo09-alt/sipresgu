@@ -14,9 +14,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
 import android.webkit.GeolocationPermissions;
@@ -39,10 +38,11 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.io.File;
@@ -64,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private SwipeRefreshLayout swipeRefresh;
     private ProgressBar progressBar;
+    private LinearLayout layoutSplash;
     private LinearLayout layoutError;
     private TextView tvErrorDetails;
     private Button btnRetry;
@@ -71,8 +72,10 @@ public class MainActivity extends AppCompatActivity {
 
     private SharedPreferences prefs;
     private String currentUrl;
+    private boolean isInitialLoad = true;
+    private long backPressedTime = 0;
 
-    // File chooser & camera capture variables
+    // File chooser & camera capture
     private ValueCallback<Uri[]> mFilePathCallback;
     private String mCameraPhotoPath;
 
@@ -86,22 +89,35 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Modern Light Status Bar
+        setupStatusBar();
+
         setContentView(R.layout.activity_main);
 
         prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
 
         initViews();
-        setupToolbar();
         checkAndRequestPermissions();
         setupWebView();
 
         loadSavedUrl();
     }
 
+    private void setupStatusBar() {
+        Window window = getWindow();
+        WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, window.getDecorView());
+        if (controller != null) {
+            // Icon status bar gelap agar terbaca jelas di background terang
+            controller.setAppearanceLightStatusBars(true);
+        }
+    }
+
     private void initViews() {
         webView = findViewById(R.id.webView);
         swipeRefresh = findViewById(R.id.swipeRefreshLayout);
         progressBar = findViewById(R.id.progressBar);
+        layoutSplash = findViewById(R.id.layoutSplash);
         layoutError = findViewById(R.id.layoutError);
         tvErrorDetails = findViewById(R.id.tvErrorDetails);
         btnRetry = findViewById(R.id.btnRetry);
@@ -120,37 +136,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         btnChangeUrl.setOnClickListener(v -> showServerUrlDialog());
-    }
-
-    private void setupToolbar() {
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayShowTitleEnabled(false);
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_refresh) {
-            layoutError.setVisibility(View.GONE);
-            webView.reload();
-            return true;
-        } else if (id == R.id.action_set_url) {
-            showServerUrlDialog();
-            return true;
-        } else if (id == R.id.action_about) {
-            showAboutDialog();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     private void checkAndRequestPermissions() {
@@ -198,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
         settings.setLoadWithOverviewMode(true);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 
-        // User Agent kustom agar web mengenali aplikasi Android
+        // Custom User-Agent
         String defaultUa = settings.getUserAgentString();
         settings.setUserAgentString(defaultUa + " SiPresGuApp/1.0");
 
@@ -215,17 +200,26 @@ public class MainActivity extends AppCompatActivity {
             public void onPageFinished(WebView view, String url) {
                 progressBar.setVisibility(View.GONE);
                 swipeRefresh.setRefreshing(false);
+
+                // Smooth Splash screen fade-out
+                if (isInitialLoad && layoutSplash != null && layoutSplash.getVisibility() == View.VISIBLE) {
+                    isInitialLoad = false;
+                    layoutSplash.animate()
+                            .alpha(0f)
+                            .setDuration(400)
+                            .withEndAction(() -> layoutSplash.setVisibility(View.GONE));
+                }
             }
 
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                // Hanya tangani error jika request adalah main frame (bukan gambar/iklan yang gagal load)
                 if (request.isForMainFrame()) {
                     progressBar.setVisibility(View.GONE);
                     swipeRefresh.setRefreshing(false);
                     webView.setVisibility(View.GONE);
+                    if (layoutSplash != null) layoutSplash.setVisibility(View.GONE);
                     layoutError.setVisibility(View.VISIBLE);
-                    tvErrorDetails.setText("Gagal membuka halaman: " + request.getUrl().toString() + "\nPeriksa koneksi atau URL server.");
+                    tvErrorDetails.setText("Gagal membuka halaman: " + request.getUrl().toString() + "\nPeriksa koneksi internet atau server Anda.");
                 }
             }
         });
@@ -241,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            // Tangani izin Geolocation / GPS di web
+            // Izin GPS Geolocation
             @Override
             public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
                 if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -255,7 +249,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            // Tangani izin WebRTC / Kamera di HTML5 (getUserMedia untuk selfie presensi)
+            // Izin Kamera Selfie HTML5 (WebRTC)
             @Override
             public void onPermissionRequest(PermissionRequest request) {
                 mPermissionRequest = request;
@@ -268,7 +262,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            // Tangani upload berkas dan pengambilan foto dari form
+            // Upload Berkas & Foto
             @Override
             public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
                 if (mFilePathCallback != null) {
@@ -305,7 +299,7 @@ public class MainActivity extends AppCompatActivity {
 
                 Intent chooserIntent = new Intent(Intent.ACTION_CHOOSER);
                 chooserIntent.putExtra(Intent.EXTRA_INTENT, contentSelectionIntent);
-                chooserIntent.putExtra(Intent.EXTRA_TITLE, "Pilih Sumber Berkas / Foto");
+                chooserIntent.putExtra(Intent.EXTRA_TITLE, "Pilih Berkas atau Kamera");
                 chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, intentArray);
 
                 startActivityForResult(chooserIntent, REQ_FILE_CHOOSER);
@@ -313,7 +307,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Tangani Download File (PDF Rekap & CSV)
+        // Unduhan Berkas Rekap (PDF/CSV)
         webView.setDownloadListener(new DownloadListener() {
             @Override
             public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimeType, long contentLength) {
@@ -323,7 +317,7 @@ public class MainActivity extends AppCompatActivity {
                     String cookies = CookieManager.getInstance().getCookie(url);
                     request.addRequestHeader("cookie", cookies);
                     request.addRequestHeader("User-Agent", userAgent);
-                    request.setDescription("Mengunduh laporan SiPresGu...");
+                    request.setDescription("Mengunduh laporan presensi...");
                     String filename = URLUtil.guessFileName(url, contentDisposition, mimeType);
                     request.setTitle(filename);
                     request.allowScanningByMediaScanner();
@@ -336,7 +330,6 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "Mengunduh: " + filename, Toast.LENGTH_SHORT).show();
                     }
                 } catch (Exception e) {
-                    // Fallback buka di browser eksternal
                     Intent i = new Intent(Intent.ACTION_VIEW);
                     i.setData(Uri.parse(url));
                     startActivity(i);
@@ -393,14 +386,6 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
-    private void showAboutDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle("Tentang SiPresGu")
-                .setMessage("SiPresGu (Sistem Presensi Guru)\nVersi Android 1.0.0\n\nAplikasi Presensi Berbasis GPS dengan Validasi Radius & Pengambilan Foto Selfie.")
-                .setPositiveButton("Tutup", null)
-                .show();
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == REQ_FILE_CHOOSER) {
@@ -454,7 +439,12 @@ public class MainActivity extends AppCompatActivity {
         if (webView.canGoBack()) {
             webView.goBack();
         } else {
-            super.onBackPressed();
+            if (backPressedTime + 2000 > System.currentTimeMillis()) {
+                super.onBackPressed();
+            } else {
+                Toast.makeText(this, "Tekan sekali lagi untuk keluar", Toast.LENGTH_SHORT).show();
+                backPressedTime = System.currentTimeMillis();
+            }
         }
     }
 }

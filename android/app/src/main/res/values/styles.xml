@@ -1,18 +1,16 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorPrimaryDark">#ffffff</item>
         <item name="colorAccent">@color/accent</item>
-        <item name="android:windowBackground">@color/background</item>
+        <item name="android:windowBackground">#ffffff</item>
+        <item name="android:statusBarColor">#ffffff</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
     </style>
 
-    <!-- Fullscreen / NoActionBar style for immersion -->
-    <style name="AppTheme.NoActionBar" parent="Theme.MaterialComponents.Light.NoActionBar">
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryDark">@color/primary_dark</item>
-        <item name="colorAccent">@color/accent</item>
-        <item name="android:statusBarColor">@color/primary_dark</item>
+    <style name="AppTheme.NoActionBar" parent="AppTheme">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
     </style>
 </resources>

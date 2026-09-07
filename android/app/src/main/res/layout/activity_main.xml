@@ -1,143 +1,142 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background">
+    android:background="@color/background"
+    android:fitsSystemWindows="true">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/appBarLayout"
+    <!-- Web Content with Pull To Refresh -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar">
+        android:layout_height="match_parent">
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/primary"
-            app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/imgToolbarLogo"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:contentDescription="@string/app_name"
-                    android:src="@drawable/app_logo" />
-
-                <TextView
-                    android:id="@+id/tvToolbarTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:text="@string/app_name"
-                    android:textColor="@color/white"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
-
-        </androidx.appcompat.widget.Toolbar>
-
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="3dp"
-            android:indeterminate="false"
-            android:max="100"
-            android:progress="0"
-            android:progressTint="@color/accent"
-            android:visibility="gone" />
-
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-        <!-- WebView with Pull To Refresh -->
-        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-            android:id="@+id/swipeRefreshLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <WebView
-                android:id="@+id/webView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-
-        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-        <!-- Offline / Connection Error View -->
-        <LinearLayout
-            android:id="@+id/layoutError"
+        <WebView
+            android:id="@+id/webView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:scrollbars="none" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- Sleek Progress Bar at top -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:layout_alignParentTop="true"
+        android:indeterminate="false"
+        android:max="100"
+        android:progress="0"
+        android:progressTint="@color/accent"
+        android:visibility="gone" />
+
+    <!-- Modern Offline / Connection Error View -->
+    <LinearLayout
+        android:id="@+id/layoutError"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:background="@color/background"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="88dp"
+            android:layout_height="88dp"
+            android:layout_marginBottom="20dp"
+            android:contentDescription="@string/app_name"
+            android:src="@drawable/app_logo" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/error_offline_title"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvErrorDetails"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:gravity="center"
-            android:orientation="vertical"
-            android:padding="28dp"
-            android:visibility="gone"
-            android:background="@color/background">
+            android:text="@string/error_offline_desc"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp" />
 
-            <ImageView
-                android:layout_width="96dp"
-                android:layout_height="96dp"
-                android:layout_marginBottom="16dp"
-                android:contentDescription="@string/app_name"
-                android:src="@drawable/app_logo" />
+        <Button
+            android:id="@+id/btnRetry"
+            android:layout_width="220dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="28dp"
+            android:background="@drawable/btn_primary"
+            android:text="@string/btn_retry"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textAllCaps="false" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/error_offline_title"
-                android:textColor="@color/text_primary"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+        <Button
+            android:id="@+id/btnChangeUrl"
+            android:layout_width="220dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/btn_secondary"
+            android:text="@string/btn_settings"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:textAllCaps="false" />
 
-            <TextView
-                android:id="@+id/tvErrorDetails"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:gravity="center"
-                android:text="@string/error_offline_desc"
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp" />
+    </LinearLayout>
 
-            <Button
-                android:id="@+id/btnRetry"
-                android:layout_width="200dp"
-                android:layout_height="48dp"
-                android:layout_marginTop="24dp"
-                android:background="@drawable/btn_primary"
-                android:text="@string/btn_retry"
-                android:textColor="@color/white"
-                android:textSize="15sp"
-                android:textAllCaps="false" />
+    <!-- Modern Splash / Initial Loading Screen -->
+    <LinearLayout
+        android:id="@+id/layoutSplash"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#ffffff"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:clickable="true"
+        android:focusable="true">
 
-            <Button
-                android:id="@+id/btnChangeUrl"
-                android:layout_width="200dp"
-                android:layout_height="48dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/btn_secondary"
-                android:text="@string/btn_settings"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp"
-                android:textAllCaps="false" />
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:contentDescription="@string/app_name"
+            android:src="@drawable/app_logo" />
 
-        </LinearLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="@string/app_name"
+            android:textColor="#0f766e"
+            android:textSize="24sp"
+            android:textStyle="bold" />
 
-    </FrameLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Sistem Presensi Guru Terpadu"
+            android:textColor="#64748b"
+            android:textSize="14sp" />
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+        <ProgressBar
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginTop="32dp"
+            android:indeterminateTint="#0d9488" />
+
+    </LinearLayout>
+
+</RelativeLayout>
