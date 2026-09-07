@@ -41,15 +41,41 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Generate Gradle Wrapper (if not present)
+      - name: Auto-Configure Gradle Files
         run: |
           cd android
+          cat << 'EOF' > settings.gradle
+          rootProject.name = "SiPresGu"
+          include ':app'
+          EOF
+
+          cat << 'EOF' > build.gradle
+          buildscript {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+              dependencies {
+                  classpath 'com.android.tools.build:gradle:8.2.2'
+              }
+          }
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          task clean(type: Delete) {
+              delete rootProject.buildDir
+          }
+          EOF
+
           if [ ! -f "gradlew" ] || [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
             gradle wrapper --gradle-version 8.5
           fi
           chmod +x gradlew
 
-      - name: Build APK (Release & Debug)
+      - name: Build APK
         run: |
           cd android
           ./gradlew assembleDebug --no-daemon --stacktrace
